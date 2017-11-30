@@ -18,6 +18,8 @@ from eth_utils import (
     encode_hex,
 )
 
+from eth_keys import keys
+
 from eth_tester.constants import (
     FORK_HOMESTEAD,
     FORK_DAO,
@@ -33,10 +35,6 @@ from eth_tester.backends.base import BaseChainBackend
 from eth_tester.backends.pyethereum.utils import (
     get_pyethereum_version,
     is_pyethereum16_available,
-)
-
-from eth_tester.utils.accounts import (
-    private_key_to_address,
 )
 
 from .serializers import (
@@ -284,7 +282,7 @@ class PyEthereum16Backend(BaseChainBackend):
             yield account
 
     def add_account(self, private_key):
-        account = private_key_to_address(private_key)
+        account = keys.PrivateKey(private_key).public_key.to_canonical_address()
         self.evm.extra_accounts[account] = private_key
 
     #

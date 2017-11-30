@@ -19,6 +19,8 @@ from eth_utils import (
     is_integer,
 )
 
+from eth_keys import keys
+
 from eth_tester.backends.base import (
     BaseChainBackend,
 )
@@ -28,9 +30,6 @@ from eth_tester.exceptions import (
     UnknownFork,
 )
 
-from eth_tester.utils.accounts import (
-    private_key_to_address,
-)
 from eth_tester.utils.encoding import (
     zpad,
 )
@@ -169,7 +168,7 @@ class MockBackend(BaseChainBackend):
         return tuple(account for account, _ in self.alloc)
 
     def add_account(self, private_key):
-        account = private_key_to_address(private_key)
+        account = keys.PrivateKey(private_key).public_key.to_canonical_address()
         self.alloc = self.alloc + (
             (account, _get_default_account_data()),
         )

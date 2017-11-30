@@ -14,6 +14,8 @@ from cytoolz.functoolz import (
     partial,
 )
 
+from eth_keys import keys
+
 from eth_utils import (
     is_integer,
     is_same_address,
@@ -39,9 +41,6 @@ from eth_tester.validation import (
     get_validator,
 )
 
-from eth_tester.utils.accounts import (
-    private_key_to_address,
-)
 from eth_tester.utils.filters import (
     Filter,
     check_if_log_matches,
@@ -61,6 +60,7 @@ def get_default_fork_blocks():
         'FORK_DAO': 0,
         'FORK_ANTI_DOS': 0,
         'FORK_STATE_CLEANUP': 0,
+        'FORK_BYZANTIUM': 0,
     }
 
 
@@ -165,7 +165,7 @@ class EthereumTester(object):
         # TODO: validation
         self.validator.validate_inbound_private_key(private_key)
         raw_private_key = self.normalizer.normalize_inbound_private_key(private_key)
-        raw_account = private_key_to_address(raw_private_key)
+        raw_account = keys.PrivateKey(raw_private_key).public_key.to_canonical_address()
         account = self.normalizer.normalize_outbound_account(raw_account)
         if any((is_same_address(account, value) for value in self.get_accounts())):
             raise ValidationError("Account already present in account list")

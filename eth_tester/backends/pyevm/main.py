@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import pkg_resources
 import time
-import warnings
 
 from eth_utils import (
     encode_hex,
@@ -14,13 +13,14 @@ from eth_utils import (
     is_integer,
 )
 
-from eth_keys import KeyAPI
+from eth_keys import keys
 
 from eth_tester.constants import (
     FORK_HOMESTEAD,
     FORK_DAO,
     FORK_ANTI_DOS,
     FORK_STATE_CLEANUP,
+    FORK_BYZANTIUM,
 )
 from eth_tester.exceptions import (
     BlockNotFound,
@@ -69,8 +69,6 @@ def get_default_account_state():
 
 @to_tuple
 def get_default_account_keys():
-    keys = KeyAPI()
-
     for i in range(1, 11):
         pk_bytes = pad_left(int_to_big_endian(i), 32, b'\x00')
         private_key = keys.PrivateKey(pk_bytes)
@@ -232,23 +230,15 @@ class PyEVMBackend(object):
     #
     def set_fork_block(self, fork_name, fork_block):
         if fork_name in SUPPORTED_FORKS:
+            # TODO: fix this.
             if fork_block:
                 self.fork_blocks[fork_name] = fork_block
-        elif fork_name == FORK_STATE_CLEANUP:
-            warnings.warn(UserWarning(
-                "Py-EVM does not currently support the SpuriousDragon hard fork."
-            ))
-            # TODO: get EIP160 rules implemented in py-evm
-            self.fork_blocks[fork_name] = fork_block
         else:
             raise UnknownFork("Unknown fork name: {0}".format(fork_name))
         self.chain.configure_forks()
 
     def get_fork_block(self, fork_name):
         if fork_name in SUPPORTED_FORKS:
-            return self.fork_blocks.get(fork_name, 0)
-        elif fork_name == FORK_STATE_CLEANUP:
-            # TODO: get EIP160 rules implemented in py-evm
             return self.fork_blocks.get(fork_name, 0)
         else:
             raise UnknownFork("Unknown fork name: {0}".format(fork_name))
@@ -258,6 +248,8 @@ class PyEVMBackend(object):
             homestead=self.fork_blocks.get(FORK_HOMESTEAD),
             dao=self.fork_blocks.get(FORK_DAO),
             anti_dos=self.fork_blocks.get(FORK_ANTI_DOS),
+            state_cleanup=self.fork_blocks.get(FORK_STATE_CLEANUP),
+            byzantium=self.fork_blocks.get(FORK_BYZANTIUM),
         )
 
     #
@@ -289,7 +281,6 @@ class PyEVMBackend(object):
             yield private_key.public_key.to_canonical_address()
 
     def add_account(self, private_key):
-        keys = KeyAPI()
         self.account_keys = self.account_keys + (keys.PrivateKey(private_key),)
 
     #

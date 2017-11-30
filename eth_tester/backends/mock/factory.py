@@ -19,7 +19,7 @@ from eth_utils import (
     apply_to_return_value,
 )
 
-from eth_tester.utils.accounts import (
+from eth_tester.utils.address import (
     generate_contract_address,
 )
 
